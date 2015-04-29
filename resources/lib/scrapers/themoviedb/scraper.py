@@ -46,7 +46,7 @@ class Main:
             if g['name'] in self.genres and len(self.genres) < 2:
                 self.genre_ids.append( g['id'] )
                 
-        self.genre_query = "|".join(str(x) for x in self.genre_ids)
+        self.genre_query = ",".join(str(x) for x in self.genre_ids)
                 
         self.movie = movie
         #  initialize trailer list
@@ -106,18 +106,19 @@ class Main:
                 #clear the watched list, since it's probably time to start over from the beginning
                 #self._reset_watched()
                 break
-                    
+        
+        utils.log(simplejson.dumps(movies_with_trailers))
         for m in movies_with_trailers:
             video_url = "plugin://plugin.video.youtube/play/?video_id=%s" % m['trailer']['key']
             utils.log("Adding trailer %s" % video_url, xbmc.LOGNOTICE)
-            this_trailer = ( '', # id
-                             '', # title
+            this_trailer = ( "-1", # id
+                             m['title'], # title
                              video_url, # trailer
-                             '', # thumb
-                             '', # plot
-                             '', # runtime
+                             'https://image.tmdb.org/t/p/original/%s' % m['poster_path'], # thumb
+                             m['overview'], # plot
+                             m['runtime'], # runtime
                              '', # mpaa
-                             '', # release date
+                             m['release_date'], # release date
                              '', # studio
                              '', # genre
                              '', # writer
