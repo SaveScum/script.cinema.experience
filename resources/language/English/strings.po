@@ -87,7 +87,11 @@ msgctxt "#32114"
 msgid "XBMC Movie Library"
 msgstr ""
 
-#empty strings from id 32115 to 32119
+msgctxt "#32115"
+msgid "TheMovieDb"
+msgstr ""
+
+#empty strings from id 32116 to 32119
 
 msgctxt "#32120"
 msgid "   - Database Path"

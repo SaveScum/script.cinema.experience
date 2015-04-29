@@ -68,7 +68,7 @@
         <setting id="cav_outro" type="enum" visible="!eq(-4,0)" lvalues="32321|32322|32323|32324|32325|32326|32327" label="32198" default="0" />
         <setting id="cav_outro_file" type="video" visible="!eq(-5,0) + eq(-1,1)" label="32196" default="" />
         <setting id="cav_outro_folder" type="folder" visible="!eq(-6,0) + gt(-2,1)" source="video" label="32197" default="" />
-        <setting id="trailer_scraper" type="enum" visible="!eq(-7,0)" lvalues="32112|32113|32114" label="32110" default="0" />  <!-- Stream -->
+        <setting id="trailer_scraper" type="enum" visible="!eq(-7,0)" lvalues="32112|32113|32114|32115" label="32110" default="0" />  <!-- Stream -->
         <setting id="trailer_play_mode" type="enum" visible="eq(-1,0)" enable="!eq(-1,1) | !eq(-1,2)" lvalues="32186|32187" label="32185" default="0" />
         <setting type="lsep" label="32921" visible="eq(-1,1)" /> 
         <setting id="trailer_download_folder" type="folder" visible="!eq(-10,0) + eq(-2,1) + !eq(-3,1) + !eq(-3,2)" source="video" label="32188" default="" />

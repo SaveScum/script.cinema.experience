@@ -73,7 +73,8 @@ def _clear_watched_items( clear_type ):
         Scraper = scraper.Main()
         # update trailers
         Scraper.clear_watched()
-        # set base watched file path
+        # set base watched file path		
+        base_paths += [ os.path.join( BASE_CURRENT_SOURCE_PATH, "themoviedb_watched.txt" ) ]
         base_paths += [ os.path.join( BASE_CURRENT_SOURCE_PATH, "amt_current_watched.txt" ) ]
         base_paths += [ os.path.join( BASE_CURRENT_SOURCE_PATH, "local_watched.txt" ) ]
     else:

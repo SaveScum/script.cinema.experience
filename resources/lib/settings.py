@@ -47,7 +47,7 @@ class settings():
                                           }
                                   
         self.trailer_settings           = {       "trailer_count": ( 0, 1, 2, 3, 4, 5, 10, )[int( float( __addon__.getSetting( "trailer_count" ) ) ) ],
-                                                "trailer_scraper": ( "amt_database", "amt_current", "local", "xbmc_library", )[int( float( __addon__.getSetting( "trailer_scraper" ) ) ) ],
+                                                "trailer_scraper": ( "amt_current", "local", "xbmc_library", "themoviedb", )[int( float( __addon__.getSetting( "trailer_scraper" ) ) ) ],
                                               "trailer_play_mode": int( float( __addon__.getSetting( "trailer_play_mode" ) ) ),
                                         "trailer_download_folder": xbmc.translatePath( __addon__.getSetting( "trailer_download_folder" ) ).decode('utf-8'),
                                                  "trailer_folder": xbmc.translatePath( __addon__.getSetting( "trailer_folder" ) ).decode('utf-8'),
