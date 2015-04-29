@@ -133,19 +133,29 @@ def _set_trailer_info( trailer ):
     
 def _get_trailer_thumbnail( path ):
     utils.log( "Getting Trailer Thumbnail" )
-    thumbnail = ""
-    base_file = os.path.splitext( path )[ 0 ]
+    # check for a thumb based on trailername.tbn
+    thumbnail = os.path.splitext( path )[ 0 ] + ".tbn"
+    utils.log( "Looking for thumbnail: %s" % thumbnail )
     # if thumb does not exist try stripping -trailer
-    file_search = [ base_file + ".tbn", base_file + ".jpg", base_file.replace( "-trailer", "" ) + ".tbn", base_file.replace( "-trailer", "" ) + ".jpg", "movie.tbn", "movie.jpg", "poster.jpg", "folder.jpg" ]
-    for item in file_search:
+    if not xbmcvfs.exists( thumbnail ):
+        thumbnail = os.path.splitext( path )[ 0 ] + ".jpg"
         utils.log( "Looking for thumbnail: %s" % thumbnail )
-        if xbmcvfs.exists( item ):
-            thumbnail = item
-            break
+        if not xbmcvfs.exists( thumbnail ):
+            thumbnail = "%s.tbn" % ( os.path.splitext( path )[ 0 ].replace( "-trailer", "" ), )
+            utils.log( "Thumbnail not found, Trying: %s" % thumbnail )
+            if not xbmcvfs.exists( thumbnail ):
+                thumbnail = "%s.jpg" % ( os.path.splitext( path )[ 0 ].replace( "-trailer", "" ), )
+                utils.log( "Looking for thumbnail: %s" % thumbnail )
+                if not xbmcvfs.exists( thumbnail ):
+                    thumbnail = os.path.join( os.path.dirname( path ), "movie.tbn" )
+                    utils.log( "Thumbnail not found, Trying: %s" % thumbnail )
+                    # if thumb does not exist return empty
+                    if not xbmcvfs.exists( thumbnail ):
+                        # set empty string
+                        thumbnail = ""
+                        utils.log( "Thumbnail not found" )
     if thumbnail:
         utils.log( "Thumbnail found: %s" % thumbnail )
-    else:
-        utils.log( "Thumbnail not found" )
     # return result
     return thumbnail
 
@@ -160,16 +170,11 @@ def _get_special_items( playlist, items, path, genre, title="", thumbnail="", pl
         utils.log( "No Items added to playlist" )
         return
     # if path is a file check if file exists
-    if genre == "Movie Rating":
-        folders, files = xbmcvfs.listdir( path )
-        for f in files:
-            if ( os.path.splitext( f )[ 0 ] ).lower() == mpaa.lower():
-                path = os.path.join( path, f )
     if os.path.splitext( path )[ 1 ] and not path.startswith( "http://" ) and not xbmcvfs.exists( path ):
         utils.log( "_get_special_items() - File Does not Exist" )
         return
     # parse playlist file
-    if ( os.path.splitext( path )[ 1 ] ).lower() in ( ".m3u", ".pls", ".asf", ".ram" ):
+    if ( os.path.splitext( path )[ 1 ] ).lower() in ( "m3u", "pls", "asf", "ram" ):
         utils.log( "Video Playlist: %s" % path )
         if ( os.path.splitext( path )[ 1 ] ).lower() == ".m3u":
             video_list = parser.parse_m3u( path, xbmc.getSupportedMedia( media_type ) )
@@ -294,7 +299,7 @@ def build_music_playlist():
     track_location = []
     # check to see if playlist or music file is selected
     if trivia_settings[ "trivia_music" ] == 1:
-        if ( os.path.splitext( trivia_settings[ "trivia_music_file" ] )[ 1 ] ).lower() in ( ".m3u", ".pls", ".asf", ".ram" ):
+        if ( os.path.splitext( trivia_settings[ "trivia_music_file" ] )[ 1 ] ).lower() in ( "m3u", "pls", "asf", "ram" ):
             utils.log( "Music Playlist: %s" % trivia_settings[ "trivia_music_file" ] )
             if trivia_settings[ "trivia_music_file" ].endswith(".m3u"):
                 track_location = parser.parse_m3u( trivia_settings[ "trivia_music_file" ], xbmc.getSupportedMedia('music') )
@@ -304,7 +309,7 @@ def build_music_playlist():
                 track_location = parser.parse_asf( trivia_settings[ "trivia_music_file" ], xbmc.getSupportedMedia('music') )
             elif trivia_settings[ "trivia_music_file" ].endswith(".ram"):
                 track_location = parser.parse_ram( trivia_settings[ "trivia_music_file" ], xbmc.getSupportedMedia('music') )
-        elif ( os.path.splitext( trivia_settings[ "trivia_music_file" ] )[1] ).replace( ".", "" ) in xbmc.getSupportedMedia('music'):
+        elif os.path.splitext( trivia_settings[ "trivia_music_file" ] )[1] in xbmc.getSupportedMedia('music'):
             for track in range(100):
                 track_location.append( trivia_settings[ "trivia_music_file" ] )
     # otherwise
@@ -347,7 +352,7 @@ def get_equivalent_rating( rating ):
     elif rating in ( "Livre", "10 Anos", "12 Anos", "14 Anos", "16 Anos", "18 Anos" ):
         rating = rating   # adding this just in case there is some with different labels in database
     else:
-        rating = ( rating, "NR", )[ rating not in ( "0", "6", "12", "12A", "PG", "15", "16", "18", "R18", "MA", "U", "G", "PG-13", "R", "NC-17", "Unrated", "NR" ) ]
+        rating = ( rating, "NR", )[ rating not in ( "0", "6", "12", "12A", "PG", "15", "16", "18", "R18", "MA", "U", ) ]
     if rating not in ( "G", "PG", "PG-13", "R", "NC-17", "Unrated", "NR" ):
         if rating in ("12", "12A", "12 Anos" ):
             equivalent_mpaa = "PG-13"
@@ -405,27 +410,34 @@ def _get_queued_video_info( feature = 0 ):
         movie_title = movie_detail['title']
         path = movie_detail['file']
         mpaa = movie_detail['mpaa']
-        movie_id = plist[feature]['id']
         genre = utils.list_to_string( movie_detail['genre'] )
         try:
             audio = movie_detail['streamdetails']['audio'][0]['codec']
         except:
             audio = "other"
+        try:
+            stereomode = movie_detail['streamdetails']['video'][0]['stereomode']
+        except:
+            stereomode = ""
         equivalent_mpaa, short_mpaa = get_equivalent_rating( mpaa )
     except:
         traceback.print_exc()
-        movie_title = path = mpaa = audio = genre = movie = equivalent_mpaa = short_mpaa = ""
-        movie_id = 0
-    is_3d_movie = test_for_3d( path )
+        movie_title = path = mpaa = audio = genre = movie = equivalent_mpaa, short_mpaa, stereomode = ""
+    if not stereomode in ( "mono", "" ):
+        is_3d_movie = True
+    elif stereomode == "": # if database still has an empty stereomode, test filename
+        is_3d_movie = test_for_3d( path )
+    else:
+        is_3d_movie = False
     # spew queued video info to log
     utils.log( "Queued Movie Information" )
     utils.log( "%s" % log_sep )
     utils.log( "Title: %s" % movie_title )
-    utils.log( "Database ID: %s" % movie_id )
     utils.log( "Path: %s" % path )
     utils.log( "Genre: %s" % genre )
     utils.log( "Rating: %s" % short_mpaa )
     utils.log( "Audio: %s" % audio )
+    utils.log( "Stereo Mode: %s" % stereomode )
     utils.log( "3D Movie: %s" % ( "False", "True" )[ is_3d_movie ] )
     if video_settings[ "audio_videos_folder" ]:
         if is_3d_movie and _3d_settings[ "3d_audio_videos_folder" ]:
@@ -434,7 +446,7 @@ def _get_queued_video_info( feature = 0 ):
             utils.log( "Folder: %s" % ( video_settings[ "audio_videos_folder" ] + audio_formats.get( audio, "Other" ) + video_settings[ "audio_videos_folder" ][ -1 ], ) )
     utils.log( "%s" % log_sep )
     # return results
-    return short_mpaa, audio, genre, movie_id, equivalent_mpaa, is_3d_movie
+    return short_mpaa, audio, genre, path, equivalent_mpaa, is_3d_movie
 
 def test_for_3d( path ):
     is_3d_movie = re.findall( _3d_settings[ "3d_movie_tags" ], path )

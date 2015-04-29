@@ -87,11 +87,7 @@ msgctxt "#32114"
 msgid "XBMC Movie Library"
 msgstr ""
 
-msgctxt "#32115"
-msgid "TheMovieDb"
-msgstr ""
-
-#empty strings from id 32116 to 32119
+#empty strings from id 32115 to 32119
 
 msgctxt "#32120"
 msgid "   - Database Path"
@@ -168,12 +164,10 @@ msgid "Download"
 msgstr ""
 
 msgctxt "#32188"
-msgid "Download Folder"
+msgid "Downioad Folder"
 msgstr ""
 
-msgctxt "#32189"
-msgid "    - Do not play trailer of selected movie"
-msgstr ""
+#empty string with id 32189
 
 msgctxt "#32190"
 msgid "- Select only unwatched Trailers"
@@ -183,11 +177,7 @@ msgctxt "#32191"
 msgid "   - Reset Trailers watched status"
 msgstr ""
 
-msgctxt "#32192"
-msgid "    - Only use trailers from unwatched movies"
-msgstr ""
-
-#empty strings from id 32193 to 32194
+#empty strings from id 32192 to 32194
 
 msgctxt "#32195"
 msgid "- Coming Attractions Intro"
@@ -492,15 +482,15 @@ msgstr ""
 #empty strings from id 32381 to 32389
 
 msgctxt "#32390"
-msgid "Movie Countdown Video File"
+msgid "Movie Coundown Video File"
 msgstr ""
 
 msgctxt "#32391"
-msgid "Movie Countdown Video Folder"
+msgid "Movie Coundown Video Folder"
 msgstr ""
 
 msgctxt "#32392"
-msgid "Movie Countdown Video"
+msgid "Movie Coundown Video"
 msgstr ""
 
 #Misc settings

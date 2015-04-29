@@ -63,7 +63,6 @@ class Trivia( xbmcgui.WindowXML ):
         self.global_timer = None
         self.slide_timer = None
         self.exiting = False
-        self.slide_type = "still"
         self.xbmc_volume = self._get_current_volume()
         self.image_count = 0
         self.watched = []
@@ -108,29 +107,27 @@ class Trivia( xbmcgui.WindowXML ):
         if self.image_count > len( self.slide_playlist ) -1:
             self._exit_trivia()
         else:     
-            self._show_slide()
-            
-    def _show_slide( self, exiting=False ):
-        myslide = self.slide_playlist[ self.image_count ]
-        self.slide_type = "still"
-        if (re.search("__question__", myslide)) :
-            self.slide_type = "question"
-            myslide = myslide.replace("__question__", "")
-        elif (re.search("__answer__", myslide)) :
-            self.slide_type = "answer"
-            myslide = myslide.replace("__answer__", "")
-        elif (re.search("__clue__", myslide)) :
-            self.slide_type = "clue"
-            myslide = myslide.replace("__clue__", "")
-        elif (re.search("__still__", myslide)) :
-            self.slide_type = "still"
-            myslide = myslide.replace("__still__", "")
-        utils.log( "Slide #%s Type %s - %s" % (self.image_count, self.slide_type, myslide), xbmc.LOGNOTICE )
-        xbmcgui.Window( xbmcgui.getCurrentWindowId() ).setProperty( "Slide", myslide )
-        # add id to watched file TODO: maybe don't add if not user preference
-        self.watched.append( xbmc.getCacheThumbName( self.slide_playlist[ self.image_count ] ) )
-        # start slide timer
-        self._get_slide_timer( self.slide_type, exiting )
+            # set the property the image control uses
+            myslide = self.slide_playlist[ self.image_count ]
+            slide_type = "still"
+            if (re.search("__question__", myslide)) :
+                slide_type = "question"
+                myslide = myslide.replace("__question__", "")
+            elif (re.search("__answer__", myslide)) :
+                slide_type = "answer"
+                myslide = myslide.replace("__answer__", "")
+            elif (re.search("__clue__", myslide)) :
+                slide_type = "clue"
+                myslide = myslide.replace("__clue__", "")
+            elif (re.search("__still__", myslide)) :
+                slide_type = "still"
+                myslide = myslide.replace("__still__", "")
+            utils.log( "Slide #%s Type %s - %s" % (self.image_count, slide_type, myslide), xbmc.LOGNOTICE )
+            xbmcgui.Window( xbmcgui.getCurrentWindowId() ).setProperty( "Slide", myslide )
+            # add id to watched file TODO: maybe don't add if not user preference
+            self.watched.append( xbmc.getCacheThumbName( self.slide_playlist[ self.image_count ] ) )
+            # start slide timer
+            self._get_slide_timer( slide_type )
         
 
     def _load_watched_trivia_file( self ):
@@ -149,7 +146,7 @@ class Trivia( xbmcgui.WindowXML ):
             xbmcvfs.delete( base_path )
             self.watched = []
 
-    def _get_slide_timer( self, slide_type="still", exiting=False ):
+    def _get_slide_timer( self, slide_type="still" ):
         if slide_type == "question": 
             timer = self.settings[ "trivia_slide_time_q" ]
         elif slide_type == "answer": 
@@ -159,21 +156,14 @@ class Trivia( xbmcgui.WindowXML ):
         elif slide_type == "still":
             timer = self.settings[ "trivia_slide_time_s" ]
         utils.log( "Slide delay %s seconds type is %s" % ( timer, slide_type ), xbmc.LOGNOTICE )
-        if not exiting:
-            self.slide_timer = threading.Timer( timer, self._next_slide,() )
-            self.slide_timer.start()
-        else:
-            self._get_global_timer( timer, self._exit_trivia )
+        self.slide_timer = threading.Timer( timer, self._next_slide,() )
+        self.slide_timer.start() 
 
     def _get_global_timer( self, time, function ):
         self.global_timer = threading.Timer( time, function,() )
         self.global_timer.start()
 
     def _exit_trivia( self ):
-        if self.slide_type not in ( "answer", "still" ) and not self.image_count > len( self.slide_playlist ) -1:
-            self.image_count += 1
-            self._cancel_timers()
-            self._show_slide( exiting=True )
         import xbmcscript_player as script
         script.Main()
         # notify we are exiting

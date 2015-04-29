@@ -1,24 +1,3 @@
-3.0.13/4.0.13
-- add       - continue slideshow if last slide is not a slide or answer
-- fix       - correct indentation in slides.py module, fixes trivia folders deeper than two levels
-- change    - only attempt to process slide folder if there are files found
-- add       - add handling of Dolby Digital Plus audio format
-- add       - allow trailer for selected movie to not play
-
-3.0.12/4.0.12
-- change    - smooth out transitions from Video Library -> Trivia -> Trivia Outro
-- change    - improve function that keeps the script running when the last video is played.
-- change    - remove unneeded Full Screen Video Activation, hopefull not needed on all skins.
-- fix       - allow MPAA ratings to not begin with 'Rated' Fixes some external library data fetching
-- change    - move home automation Script End triggering
-
- 3.0.11/4.0.11
-- fix       - Allow Trivia Limit slides to function properly.
-- change    - allow any video file extension for Movie Ratings(previously only AVI extensions were allowed)
-- fix       - properly disable 2D videos when 3D version and setting is enabled
-- change    - slight code reduction
-- fix       - fix extension testing.  Fixes playlist not properly handled and some other issues
-
 3.0.10/4.0.10
 - fix       - correct Import.
 

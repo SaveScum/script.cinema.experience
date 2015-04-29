@@ -47,7 +47,7 @@ class settings():
                                           }
                                   
         self.trailer_settings           = {       "trailer_count": ( 0, 1, 2, 3, 4, 5, 10, )[int( float( __addon__.getSetting( "trailer_count" ) ) ) ],
-                                                "trailer_scraper": ( "amt_current", "local", "xbmc_library", "themoviedb", )[int( float( __addon__.getSetting( "trailer_scraper" ) ) ) ],
+                                                "trailer_scraper": ( "amt_database", "amt_current", "local", "xbmc_library", )[int( float( __addon__.getSetting( "trailer_scraper" ) ) ) ],
                                               "trailer_play_mode": int( float( __addon__.getSetting( "trailer_play_mode" ) ) ),
                                         "trailer_download_folder": xbmc.translatePath( __addon__.getSetting( "trailer_download_folder" ) ).decode('utf-8'),
                                                  "trailer_folder": xbmc.translatePath( __addon__.getSetting( "trailer_folder" ) ).decode('utf-8'),
@@ -61,8 +61,7 @@ class settings():
                                                  "trailer_rating": __addon__.getSetting( "trailer_rating" ),
                                    "trailer_unwatched_movie_only": eval( __addon__.getSetting( "trailer_unwatched_movie_only" ) ),
                                          "trailer_unwatched_only": eval( __addon__.getSetting( "trailer_unwatched_only" ) ),
-                                           "trailer_skip_youtube": eval( __addon__.getSetting( "trailer_skip_youtube" ) ),
-                                              "trailer_not_movie": eval( __addon__.getSetting( "trailer_not_movie" ) )
+                                           "trailer_skip_youtube": eval( __addon__.getSetting( "trailer_skip_youtube" ) )
                                           }
 
         self.video_settings             = {           "mte_intro": ( 0, 1, 1, 2, 3, 4, 5, )[ int( float( __addon__.getSetting( "mte_intro" ) ) ) ],
@@ -142,7 +141,9 @@ class settings():
                                              "intermission_audio": eval( __addon__.getSetting( "intermission_audio" ) ),
                                            "intermission_ratings": eval( __addon__.getSetting( "intermission_ratings" ) ),
                                                     "voxcommando": eval( __addon__.getSetting( "voxcommando" ) ),
-                                                  "override_play": eval( __addon__.getSetting( "override_play" ) )
+                                                  "override_play": eval( __addon__.getSetting( "override_play" ) ),
+                                                    "autorefresh": eval( __addon__.getSetting( "autorefresh" ) ),
+                                              "autorefresh_movie": eval( __addon__.getSetting( "autorefresh_movie" ) )
                                       }
         
         self._3d_settings           = {         "enable_3d_intro": eval( __addon__.getSetting( "enable_3d_intro" ) ),
@@ -193,12 +194,13 @@ class settings():
                                                           "dtshr": "DTS-HR",
                                                             "ac3": "Dolby",
                                                        "a_truehd": "Dolby TrueHD",
-                                                         "truehd": "Dolby TrueHD",
-                                                         "a_eac3": "Dolby Digital Plus"
+                                                         "truehd": "Dolby TrueHD"
                                        }
+                                       
         self.triggers               = ( "Script Start", "Trivia Intro", "Trivia", "Trivia Outro", "Coming Attractions Intro", "Movie Trailer", 
-                                    "Coming Attractions Outro", "Movie Theater Intro", "Countdown", "3D Movie Trailer", "Feature Presentation Intro", "Audio Format", 
-                                    "MPAA Rating", "Movie", "Feature Presentation Outro", "Movie Theatre Outro", "Intermission", "Script End", "Pause", "Resume" )
+                                    "Coming Attractions Outro", "Movie Theater Intro", "Countdown", "3D Intro", "3D Movie Trailer", "3D Outro",
+                                    "Feature Presentation Intro", "Audio Format", "MPAA Rating", "Movie", "Feature Presentation Outro",
+                                    "Movie Theatre Outro", "Intermission", "Script End", "Pause", "Resume" )
 
     def read_settings_xml( self ):
         setting_values = {}

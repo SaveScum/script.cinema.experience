@@ -47,18 +47,23 @@ import utils
 class Script():
     def __init__(self, *args, **kwargs):
         self.init_var()
-        
+    
     def init_var( self ):
         self.player = xbmc.Player()
-        
-    def start_script( self, library_view = "oldway" ):
+        self.autorefresh = 0
+        self.screensaver = ""
+        self.original_autorefresh = 0
+        self.original_screensaver = ""
+    
+    def start_script( self, library_view = "oldway", original_autorefresh = 0 ):
         messy_exit = False
         utils.log( "Library_view: %s" % library_view, xbmc.LOGNOTICE )
         early_exit = False
         movie_next = False
         prev_trigger = None
-        self.video_window = xbmcgui.WindowXML( "script_CExperience-video.xml", __addon__.getAddonInfo('path'), "Default", "720p" )
-        self.video_window.show()
+        autorefresh_movie = False
+        self.autorefresh = original_autorefresh
+        self.original_autorefresh = original_autorefresh
         if library_view != "oldway":
             xbmc.executebuiltin( "ActivateWindow(videolibrary,%s,return)" % library_view )
             # wait until Video Library shows
@@ -99,15 +104,17 @@ class Script():
             self._play_trivia( mpaa, genre, plist, equivalent_mpaa )
             mplaylist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
             mplaylist.clear()
+            jsonquery = '''{"jsonrpc": "2.0", "method": "Settings.SetSettingValue",  "params": { "setting": "screensaver.mode", "value": "None" }, "id": 1}'''
+            jsonresponse = xbmc.executeJSONRPC( jsonquery )
             trigger_list = self.load_trigger_list()
             self.player.play( playlist )
             count = -1
             stop_check = 0
-            paused = False            
+            paused = False
             # wait until fullscreen video is shown
             while not xbmc.getCondVisibility( "Window.IsActive(fullscreenvideo)" ):
                 pass
-            while ( not playlist.getposition() == ( playlist.size() - 1 ) or xbmcgui.Window( 10025 ).getProperty( "CinemaExperienceRunning" ) == "True" ):
+            while not playlist.getposition() == ( playlist.size() - 1 ):
                 if playlist.getposition() > count:
                     try:
                         utils.log( "Item From Trigger List: %s" % trigger_list[ playlist.getposition() ], xbmc.LOGNOTICE )
@@ -116,6 +123,15 @@ class Script():
                     utils.log( "Playlist Position: %s  Playlist Size: %s " % ( ( playlist.getposition() + 1 ), ( playlist.size() ) ), xbmc.LOGNOTICE )
                     if not playlist.getposition() == ( playlist.size() - 1 ):
                         prev_trigger = Launch_automation().launch_automation( trigger_list[ playlist.getposition() ], prev_trigger )
+                        if trigger_list[ playlist.getposition() ] == "Movie":
+                            if extra_settings[ "autorefresh" ] and extra_settings[ "autorefresh_movie" ]:
+                                self.auto_refresh( "enable" )
+                                autorefresh_movie = True
+                        else:
+                            if extra_settings[ "autorefresh" ]:
+                                self.auto_refresh( "disable" )
+                                autorefresh_movie = False
+                        utils.log( "[ script.cinema.experience ] - autorefresh_movie: %s" % autorefresh_movie )
                         count = playlist.getposition()
                     else: 
                         break  # Reached the last item in the playlist
@@ -137,12 +153,22 @@ class Script():
                 prev_trigger = Launch_automation().launch_automation( trigger_list[ playlist.getposition() ], prev_trigger )
                 if trigger_list[ playlist.getposition() ] == "Movie":
                     utils.log( "Item From Trigger List: %s" % trigger_list[ playlist.getposition() ], xbmc.LOGNOTICE )
+                    if extra_settings[ "autorefresh" ] and extra_setting[ "autorefresh_movie" ]:
+                        self.auto_refresh( "enable" )
+                        autorefresh_movie = True
                 else:
                     utils.log( "Item From Trigger List: %s" % trigger_list[ playlist.getposition() ], xbmc.LOGNOTICE )
+                    if extra_settings[ "autorefresh" ]:
+                        self.auto_refresh( "disable" )
+                        autorefresh_movie = False
                 messy_exit = False
                 xbmc.sleep(1000)
                 self._wait_until_end()
+                if extra_settings[ "autorefresh" ] and self.original_autorefresh > 0:
+                    self.auto_refresh( "enable" )
             else:
+                if extra_settings[ "autorefresh" ] and self.original_autorefresh > 0:
+                    self.auto_refresh( "enable" )
                 utils.log( "User might have pressed stop", xbmc.LOGNOTICE )
                 utils.log( "Stopping Script", xbmc.LOGNOTICE )
                 messy_exit = False
@@ -171,7 +197,18 @@ class Script():
             utils.log( "Feature - %s" % movie_title, xbmc.LOGNOTICE )
             if extra_settings[ "voxcommando" ]:
                 utils.broadcastUDP( "<b>CElaunch<li>" + movie_title + "</b>", port = 33000 )
-
+                
+    def auto_refresh( self, mode ):
+        utils.log( "[ script.cinema.experience ] - auto_refresh( %s, %s )" % ( self.original_autorefresh, mode ), xbmc.LOGNOTICE )
+        # turn off autorefresh
+        if extra_settings[ "autorefresh" ] and self.original_autorefresh > 0 and mode=="disable":
+            jsonquery = '''{"jsonrpc": "2.0", "method": "Settings.SetSettingValue",  "params": { "setting": "videoplayer.adjustrefreshrate", "value": 0 }, "id": 1}'''
+            jsonresponse = xbmc.executeJSONRPC( jsonquery )
+        # turn on autorefresh
+        elif extra_settings[ "autorefresh" ] and self.original_autorefresh > 0 and mode=="enable":
+            jsonquery = '''{"jsonrpc": "2.0", "method": "Settings.SetSettingValue",  "params": { "setting": "videoplayer.adjustrefreshrate", "value": 1 }, "id": 1}'''
+            jsonresponse = xbmc.executeJSONRPC( jsonquery )
+        
     def _jsonrpc_query( self, jsonquery ):
         movie_ids = []        
         jsonresponse = xbmc.executeJSONRPC( jsonquery )
@@ -211,15 +248,16 @@ class Script():
             
     def _wait_until_end( self ): # wait until the end of the playlist(for Trivia Intro)
         utils.log( "Waiting Until End Of Video", xbmc.LOGNOTICE )
-        xbmc.sleep( 5000 )
         try:
             self.psize = int( xbmc.PlayList( xbmc.PLAYLIST_VIDEO ).size() ) - 1
             utils.log( "Playlist Size: %s" % ( self.psize + 1 ) )
             while xbmc.PlayList( xbmc.PLAYLIST_VIDEO ).getposition() < self.psize:
                 pass
             utils.log( "Video TotalTime: %s" % self.player.getTotalTime() )
-            while xbmcgui.Window( 10025 ).getProperty( "CinemaExperiencePlaying" ) != "False":
+            while self.player.getTime() < ( self.player.getTotalTime() - 1 ):
                 pass
+            utils.log( "Video getTime: %s"  % self.player.getTime() )
+            #xbmc.sleep(400)
         except:
             traceback.print_exc()
             utils.log( "Video either stopped or skipped, Continuing on..." )
@@ -249,6 +287,7 @@ class Script():
                     utils.log( "Failed to Load mq_ce_play module", xbmc.LOGNOTICE )
                 except:
                     traceback.print_exc()
+    #            pDialog.close()
                 self.trivia_intro()        
                 if playlist.size() > 0:
                     self._wait_until_end()
@@ -270,7 +309,7 @@ class Script():
             _rebuild_playlist( plist )
             import xbmcscript_player as script
             script.Main()
-            #xbmc.executebuiltin( "XBMC.ActivateWindow(fullscreenvideo)" )
+            xbmc.executebuiltin( "XBMC.ActivateWindow(fullscreenvideo)" )
             #xbmc.sleep(500) # wait .5 seconds
             #xbmc.Player().play( playlist )
         elif trivia_settings[ "trivia_folder" ] and trivia_settings[ "trivia_mode" ] == 1:  # Start Slide Show
@@ -284,7 +323,8 @@ class Script():
             slide_playlist = _fetch_slides( equivalent_mpaa )
             self.trivia_intro()
             if playlist.size() > 0:
-                Launch_automation().launch_automation( "Trivia Intro" ) # Trivia Intro
+                Launch_automation().launch_automation( triggers[1] ) # Trivia Intro
+                xbmc.sleep( 500 ) # wait .5 seconds 
                 self._wait_until_end()
             #xbmc.sleep(500) # wait .5 seconds 
             xbmc.Player().stop()
@@ -294,14 +334,14 @@ class Script():
             __builtin__.movie_genre = genre
             from xbmcscript_trivia import Trivia
             utils.log( "Starting Trivia script", xbmc.LOGNOTICE )
-            Launch_automation().launch_automation( "Trivia" ) # Trivia Start
+            Launch_automation().launch_automation( triggers[2] ) # Trivia Start
             ui = Trivia( "script-CExperience-trivia.xml", __addon__.getAddonInfo('path'), "Default", "720p" )
             ui.doModal()
             del ui
             # we need to activate the video window
-            xbmc.sleep(1000)
-            del self.video_window
+            #xbmc.sleep(5) # wait .005 seconds
             xbmc.executebuiltin( "XBMC.ActivateWindow(fullscreenvideo)" )
+            #xbmc.Player().play( playlist )
         elif trivia_settings[ "trivia_mode" ] == 0: # No Trivia
             # no trivia slide show so play the video
             self.start_downloader( mpaa, genre, equivalent_mpaa )
@@ -309,6 +349,6 @@ class Script():
             # play the video playlist
             import xbmcscript_player as script
             script.Main()
-            #xbmc.executebuiltin( "XBMC.ActivateWindow(fullscreenvideo)" )
-            #xbmc.sleep( 500 ) # wait .5 seconds
-            
+            xbmc.executebuiltin( "XBMC.ActivateWindow(fullscreenvideo)" )
+            xbmc.sleep( 500 ) # wait .5 seconds
+            #xbmc.Player().play( playlist )
